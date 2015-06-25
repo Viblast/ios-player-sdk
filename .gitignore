@@ -1,0 +1,12 @@
+# Xcode
+.DS_Store
+build/
+*.pbxuser
+!default.pbxuser
+*.xcworkspace
+!default.xcworkspace
+xcuserdata/
+profile
+*.moved-aside
+DerivedData
+.idea/
