@@ -1,5 +1,5 @@
 ### Overview
-Viblast Player iOS SDK plays HLS and MPEG DASH streams using the iOS devices’ hardware decoders for video and audio. The API is similar to Apple's AVPlayer, but much simple and can be easily integrated into existing projects using the AVPlayer. Currently, this DASH player SDK is most suitable for live streaming applications as the seek features is not yet enabled. If your main interest is in video on-demand (VoD), let us know. The Player can be easily extended to use Viblast PDN and enable P2P delivery.
+Viblast Player iOS SDK plays HLS and MPEG DASH streams using the iOS devices’ hardware decoders for video and audio. The API is similar to Apple's AVPlayer, but much simpler and can be easily integrated into existing projects using the AVPlayer. Currently, this DASH player SDK is most suitable for live streaming applications as the seek features is not yet enabled. If your main interest is in video on-demand (VoD), let us know. The Player can be easily extended to use Viblast PDN and enable P2P delivery.
 
 Visit [Viblast's commercial web page](http://viblast.com/)
 
