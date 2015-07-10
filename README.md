@@ -6,11 +6,9 @@ Visit [Viblast's commercial web page](http://viblast.com/)
 ### Project setup
 Let's assume you have an existing XCode project or you've just created one.   
 
-Unzip...  
-Drag and drop the unzipped content in your project.  
-For example, you can make a group in your project, name it 
-*VBPlayer*, select the unzipped content (that is the `VBPlayer.a` library and 
-all the header files), and drop it inside.
+Drag and drop the library and it's headers (e.g. VBPlayer.a and VBPlayer.h) in your project.
+For example, you can make a group, name it 
+*VBPlayer*, select the aforementioned files and drop them inside.
 When XCode asks you to choose options for added files, don't forget to mark
 the '*Copy items if needed*' option.  
 Notice that `VBPlayer.a` is a *fat* library, i.e. it is built for both 32bit 
