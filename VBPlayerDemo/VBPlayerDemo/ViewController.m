@@ -76,7 +76,9 @@ static void *kPlayerStatusObserveContext = &kPlayerStatusObserveContext;
   [self setLoadingVisible:YES];
   
   self.player = [[VBPlayer alloc]
-                 initWithCDN:@"http://wowza.viblast.com:1935/vod/smil:bunny.smil/manifest.mpd"
+                 // Viblast: You can also try with your favourite HLS or DASH stream :)
+                 initWithCDN:@"http://responsive-tv-shared.s3.amazonaws.com/sample-video/mpeg-dash-ondemand/full.mpd"
+                 enabledPDN:NO
                  licenseKey:nil];
   [self.player addObserver:self
                 forKeyPath:@"status"

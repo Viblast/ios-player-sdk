@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <QuartzCore/QuartzCore.h>
+#import <AVFoundation/AVFoundation.h>
 
 #if defined(__cplusplus)
 #define VIBLAST_EXPORT extern "C"
@@ -16,6 +17,8 @@
 #endif
 
 VIBLAST_EXPORT NSString *const VBErrorDomain;
+
+VIBLAST_EXPORT NSString *const VBPlayerPlaybackStalledNotification;
 
 typedef NS_ENUM(NSInteger, VBPlayerStatus) {
   VBPlayerStatusUnknown,
@@ -33,10 +36,38 @@ typedef NS_ENUM(NSInteger, VBPlayerStatus) {
 // If the state happens to be VBPlayerStatusFailed you must reinitalize the player.
 @property (nonatomic, readonly) VBPlayerStatus status;
 
-- (instancetype)initWithCDN:(NSString *)cdn licenseKey:(NSString *)licenseKey;
+// Currently supported values are 0.0 for stopped playback and 1.0 for playing at normal rate.
+@property (nonatomic) float rate;
+
+// Can't use KVO
+@property (readonly) CMTime duration;
+
+// Use periodic time notifications to poll this property.
+@property (readonly) CMTime currentTime;
+
+- (instancetype)initWithCDN:(NSString *)cdn
+                 enabledPDN:(BOOL)enabledPDN
+                 licenseKey:(NSString *)licenseKey;
+
 - (instancetype)initWithArgs:(NSString *)args;
 
 - (void)play;
+- (void)pause;
+- (void)seekToTime:(CMTime)time;
+// Use to receive a callback when seek is completed. Only the completion of the last seek will be
+// called, i.e. if there is a seek in progress its completion will be ignored.
+- (void)seekToTime:(CMTime)time completion:(void(^)(void))completion;
+
+// Observe periodic time changes.
+// Must retain the result in order the |block| to be called.
+// If |queue| is NULL the updates will be deliverd on the main queue.
+// Use |interval| to specify how often the block should be called.
+// Inside the observer you can inspect the current time.
+// Pair with -removeTimeObserver:.
+- (id)addPeriodicTimeObserverForInterval:(CMTime)interval
+                                   queue:(dispatch_queue_t)queue
+                              usingBlock:(void (^)(void))block;
+- (void)removeTimeObserver:(id)observer;
 @end
 
 
