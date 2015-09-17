@@ -1,5 +1,5 @@
 ### Overview
-Viblast Player iOS SDK plays HLS and MPEG DASH streams using the iOS devices’ hardware decoders for video and audio. The API is similar to Apple's AVPlayer, but much simpler and can be easily integrated into existing projects using the AVPlayer. Currently, this DASH player SDK is most suitable for live streaming applications as the seek features is not yet enabled. If your main interest is in video on-demand (VoD), let us know. The Player can be easily extended to use Viblast PDN and enable P2P delivery.
+Viblast Player iOS SDK plays HLS and MPEG DASH streams using the iOS devices’ hardware decoders for video and audio. The API is similar to Apple's AVPlayer, but much simpler and can be easily integrated into existing projects using the AVPlayer. The Player can be easily configured to use Viblast PDN and enable P2P delivery.
 
 Visit [Viblast's commercial web page](http://viblast.com/)
 
@@ -39,23 +39,27 @@ VBPlayer is reminiscent of Apple's AVPlayer, but much simpler.
 
 Currenty, you can initialize Viblast Player just by providing it with an *HLS* or *DASH* 
 stream, for example:  
-`_player = [[VBPlayer alloc] initWithCDN:@"www.mycdn.com/playlist.m3u8"];`
+
+```
+_player = [[VBPlayer alloc] initWithCDN:@"www.mycdn.com/manifest.mpd" 
+                             enabledPDN:NO
+                             licenseKey:nil];
+```
 
 The player has a status property which you can observe.   
-When the player status is changed to `VBPlayerStatusReadyToPlay` you can invoke 
-the player's `play` method.
+When the player status is changed to `VBPlayerStatusReadyToPlay` you can safely assume that  `play` will start the playback simultaneously.
 
-If you want to stop the player, you just have to release it, like this:  
-`_player = nil;`
 
-If you want to restart it, you just have to reinitilize it, like this:  
+If you want to restart the player, you just have to reinitilize it, like this:  
 `_player = [[VBPlayer alloc] ... ];`
 
 If the player fails for some reason, i.e when its status becomes 
 `VBPlayerStatusFailed`, you can examine its `error` property for more information 
 about the failure.
 
-### Usage example
+API is pretty self-explanatory and you can use comments in `VBPlayer.h` for more information.
+
+### Basic usage example
 
 The first thing you need to do is to provide or create a `UIView`, which will 
 display the output of the player. The views's layer must be of `VBPlayerLayer` class, i.e it must have its `+layerClass` method overridden:
@@ -101,7 +105,9 @@ static void *PlayerStatusObserveCtx = &PlayerStatusObserveCtx;
                                       | UIViewAutoresizingFlexibleHeight);
   [self.view addSubview:self.playerView];
 
-  self.player = [[VBPlayer alloc] initWithCDN:@"www.mycdn.com/playlist.m3u8"];
+  self.player = [[VBPlayer alloc] initWithCDN:@"www.mycdn.com/manifest.mpd" 
+                                   enabledPDN:NO // Use the player only for playback i.e., without p2p
+                                   licenseKey:nil];
   [self.player addObserver:self
                 forKeyPath:@"status"
                    options:(NSKeyValueObservingOptionNew|NSKeyValueObservingOptionInitial)
