@@ -4,6 +4,9 @@ Viblast Player iOS SDK plays HLS and MPEG DASH streams using the iOS devices’ 
 Visit [Viblast's commercial web page](http://viblast.com/)
 
 ### Project setup
+
+**We've encountered some issues migrating to XCode7 so until we resolve them please set the _Enable Bitcode_ option to "_No_" from your project's _Build Settings_.** 
+
 Let's assume you have an existing XCode project or you've just created one.   
 
 Drag and drop the library and it's headers (e.g. VBPlayer.a and VBPlayer.h) in your project.
