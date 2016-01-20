@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "PlayerView.h"
+#import "VBPlayer.h"
 
 static NSUInteger kToolbarPlaybackButtonItemIndex = 1;
 static void *kPlayerStatusObserveContext = &kPlayerStatusObserveContext;
@@ -91,7 +92,6 @@ static void *kPlayerStatusObserveContext = &kPlayerStatusObserveContext;
   [self.player removeObserver:self forKeyPath:@"status"];
   
   self.player = nil;
-  self.playerView.player = nil;
 }
 
 - (void)setLoadingVisible:(BOOL)visible {
@@ -119,7 +119,7 @@ static void *kPlayerStatusObserveContext = &kPlayerStatusObserveContext;
       case VBPlayerStatusReadyToPlay: {
         [self setLoadingVisible:NO];
         
-        [self.playerView setPlayer:self.player];
+        [self.player setDisplayLayer:[self.playerView displayLayer]];
         [self.player play];
         break;
       }

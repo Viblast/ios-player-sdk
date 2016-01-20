@@ -11,14 +11,10 @@
 @implementation PlayerView
 
 + (Class)layerClass {
-  return [VBPlayerLayer class];
+  return [VBDisplayLayer class];
 }
 
-- (void)setPlayer:(VBPlayer *)player {
-  [(VBPlayerLayer *)self.layer setPlayer:player];
-}
-
-- (VBPlayer *)player {
-  return [(VBPlayerLayer *)self.layer player];
+- (VBDisplayLayer *)displayLayer {
+  return (VBDisplayLayer *)self.layer;
 }
 @end

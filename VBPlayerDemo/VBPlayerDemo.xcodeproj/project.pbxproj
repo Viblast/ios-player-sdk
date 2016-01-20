@@ -34,6 +34,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2C05960C1C4FCB40007A764C /* VBDisplayLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VBDisplayLayer.h; sourceTree = "<group>"; };
 		2C697BD51B330A360053BAE5 /* VBPlayerDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VBPlayerDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2C697BD91B330A360053BAE5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2C697BDA1B330A360053BAE5 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -109,6 +110,7 @@
 			isa = PBXGroup;
 			children = (
 				2CD393831B3C08DF00AC9A86 /* VBPlayer.a */,
+				2C05960C1C4FCB40007A764C /* VBDisplayLayer.h */,
 				2CD393841B3C08DF00AC9A86 /* VBPlayer.h */,
 				2C697BDC1B330A360053BAE5 /* AppDelegate.h */,
 				2C697BDD1B330A360053BAE5 /* AppDelegate.m */,

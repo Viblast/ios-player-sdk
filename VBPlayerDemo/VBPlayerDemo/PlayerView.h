@@ -8,9 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
-#import "VBPlayer.h"
+#import "VBDisplayLayer.h"
 
 @interface PlayerView : UIView
 
-@property (nonatomic) VBPlayer *player;
+- (VBDisplayLayer *)displayLayer;
 @end

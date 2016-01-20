@@ -10,15 +10,13 @@
 #import <QuartzCore/QuartzCore.h>
 #import <AVFoundation/AVFoundation.h>
 
+#import "VBDisplayLayer.h"
+
 #if defined(__cplusplus)
 #define VIBLAST_EXPORT extern "C"
 #else
 #define VIBLAST_EXPORT extern
 #endif
-
-VIBLAST_EXPORT NSString *const VBErrorDomain;
-
-VIBLAST_EXPORT NSString *const VBPlayerPlaybackStalledNotification;
 
 typedef NS_ENUM(NSInteger, VBPlayerStatus) {
   VBPlayerStatusUnknown,
@@ -26,6 +24,30 @@ typedef NS_ENUM(NSInteger, VBPlayerStatus) {
   VBPlayerStatusFailed
 };
 
+VIBLAST_EXPORT NSString *const VBErrorDomain;
+
+@class VBPlayer;
+
+/*
+ VBPlayerDelegate
+ 
+ All of the methods are sent on the main thread.
+ */
+@protocol VBPlayerDelegate <NSObject>
+
+@optional
+
+- (void)playerDidEnterStall:(VBPlayer *)player;
+- (void)playerDidExitStall:(VBPlayer *)player;
+
+- (void)playerDidFinish:(VBPlayer *)player;
+@end
+
+
+/*
+ VBPlayer
+ 
+ */
 @interface VBPlayer : NSObject
 
 // Contains the error when player's status is set to VBPlayerStatusFailed.
@@ -45,6 +67,8 @@ typedef NS_ENUM(NSInteger, VBPlayerStatus) {
 // Use periodic time notifications to poll this property.
 @property (readonly) CMTime currentTime;
 
+@property (nonatomic, weak) id<VBPlayerDelegate> delegate;
+
 - (instancetype)initWithCDN:(NSString *)cdn
                  enabledPDN:(BOOL)enabledPDN
                  licenseKey:(NSString *)licenseKey;
@@ -53,7 +77,9 @@ typedef NS_ENUM(NSInteger, VBPlayerStatus) {
 
 - (void)play;
 - (void)pause;
+
 - (void)seekToTime:(CMTime)time;
+
 // Use to receive a callback when seek is completed. Only the completion of the last seek will be
 // called, i.e. if there is a seek in progress its completion will be ignored.
 - (void)seekToTime:(CMTime)time completion:(void(^)(void))completion;
@@ -68,27 +94,52 @@ typedef NS_ENUM(NSInteger, VBPlayerStatus) {
                                    queue:(dispatch_queue_t)queue
                               usingBlock:(void (^)(void))block;
 - (void)removeTimeObserver:(id)observer;
+
+// Set a layer to render the player's output
+- (void)setDisplayLayer:(VBDisplayLayer *)layer;
+
 @end
 
 
-// Return VBPlayerLayer class as layerClass of your UIView in order to
-// display the output of the player, e.g.
-//
-//  @implementation MyPlayerView
-//  ...
-//  + (Class)layerClass {
-//    return [VBPlayerLayer class];
-//  }
-//  ...
-//  @end
-@interface VBPlayerLayer : CALayer
+/*
+ VBDataPlayer
+ 
+ A subclass of VBPlayer which exposes a buffer-like interface to let you feed the player with media 
+ segments. Current supported media coding is only MP4.
 
-// The player which output will be displayed in the layer
-@property (nonatomic, strong) VBPlayer *player;
+ Things to keep in mind:
+ * You can manipulate the current time using -seekToTime:. By default it is set to 0.
+ * The player DOESN'T CACHE any data back in time, so:
+   1) whenever you seek, all the data prior to the seeked moment will be discarded. 
+   2) it's the client's responsibility to cache or acquire the media data again and feed it when 
+   appropriate.
+ * Calling |duration| on this player will result in kCMTimeIndefinite.
+ * You should again observer the player's |status| to know when the player is ready to play.
+ 
+ */
 
-// You can use KVO to observe the following two properties
-@property (nonatomic, readonly, getter=isReadyForDisplay) BOOL readyForDisplay;
-@property (nonatomic, readonly) CGRect displayRect;
+typedef NS_ENUM(NSInteger, VBDataCoding) {
+  VBDataCodingMP4,
+  VBDataCodingMP4Audio,
+  VBDataCodingMP4Video,
+  VBDataCodingMP4Metadata,
+};
 
-+ (instancetype)layerWithPlayer:(VBPlayer *)player;
+@interface VBDataPlayer : VBPlayer
+
++ (instancetype)createDataPlayer;
+
+// Enqueues media |data| to be played at some point ahead of time.
+// NOTE: Each |data| MUST be the continuation of the data previously appended! This does NOT hold
+// if the append is made after a seek or if this is the first append.
+- (BOOL)appendData:(NSData *)data coding:(VBDataCoding)coding error:(NSError **)outError;
+
+// Returns the buffered media time ahead. This is the minimum between the audio and the video.
+- (CMTime)bufferredDuration;
+
+// Tells the player that there is no more data to be played and that it should finish when it has
+// played its last piece of data.
+// NOTE: Whenever -seekToTime: is issued this information is lost and you have to call this method
+// again when appropriate.
+- (void)endOfStream;
 @end
