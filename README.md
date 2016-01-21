@@ -1,146 +1,97 @@
 ### Overview
-Viblast Player iOS SDK plays HLS and MPEG DASH streams using the iOS devices’ hardware decoders for video and audio. The API is similar to Apple's AVPlayer, but much simpler and can be easily integrated into existing projects using the AVPlayer. The Player can be easily configured to use Viblast PDN and enable P2P delivery.
+Viblast Player iOS SDK plays HLS and MPEG DASH streams using the iOS devices hardware decoders for video and audio. The API is similar to Apple's AVPlayer, but much simpler and can be easily integrated into existing projects using the AVPlayer. The Player can be easily configured to use Viblast PDN and enable P2P delivery.
 
 Visit [Viblast's commercial web page](http://viblast.com/)
 
-### Project setup
+This repository contains an example XCode project to demonstrate the basic usage of the player.
 
-**We've encountered some issues migrating to XCode7 so until we resolve them please set the _Enable Bitcode_ option to "_No_" from your project's _Build Settings_.** 
+### XCode
+If you want to start using [Viblast](http://viblast.com/player/)'s player in your XCode project here is what you need to do:  
 
-Let's assume you have an existing XCode project or you've just created one.   
+Drag and drop the library and all of its headers (you can find them inside the example project - all VB\*.\* files) 
+in your project. When XCode asks you to choose options for added files, don't forget to put a mark on '*Copy items if needed*' option.  
+The remarkable size of `VBPlayer.a` is due to the fact the library is *fat*. It has 4 different builds inside of it - 2 for  device and 2 for simulator (one for 32bit and one for 64bit architectures).  
 
-Drag and drop the library and it's headers (e.g. VBPlayer.a and VBPlayer.h) in your project.
-For example, you can make a group, name it 
-*VBPlayer*, select the aforementioned files and drop them inside.
-When XCode asks you to choose options for added files, don't forget to mark
-the '*Copy items if needed*' option.  
-Notice that `VBPlayer.a` is a *fat* library, i.e. it is built for both 32bit 
-and 64bit architectures.
-
-Now go to the project's build target. 
-
-Select **Build Phases** and under the **Link Binary With Libraries** section add the 
-following frameworks:
+Go to the project's build target.   
+**(We've encountered some issues migrating to XCode7 so until we resolve them please set the _Enable Bitcode_ option to "_No_"!)**   
+Select **Build Phases** and under the **Link Binary With Libraries** section make sure the  
+following are present:  
 
 * Foundation
 * AVFoundation
 * VideoToolbox
 * CoreGraphics
-* CoreMedia  
+* CoreMedia    
 
 *NOTE: If you've followed the previous steps, the `VBPlayer.a` lib should 
-already be there.*
-
-Select **Build Settings** and add the following in **Other Linker Flags**:
+already be there.*  
+Now select **Build Settings** and add the following in **Other Linker Flags**:
 
 * -lstdc++
 * -ObjC
 
-### API
+### Brief documentation
 
-VBPlayer is reminiscent of Apple's AVPlayer, but much simpler.
+`VBPlayer.h` is pretty self-explanatory on its own and it can be used as a good source of documentation.
+It defines two major interfaces:
 
-Currenty, you can initialize Viblast Player just by providing it with an *HLS* or *DASH* 
-stream, for example:  
+* `VBPlayer` is a player which can play a *HLS* or *DASH* streams provided from a *CDN* and its successor
+* `VBDataPlayer` can play separate media segments (or chunks) delivered by the client.
 
+##### VBPlayer
+The API is reminiscent of Apple's AVPlayer, but much simpler.  
+You can initialize the player with a single URL of the CDN hosting the stream:
 ```
-_player = [[VBPlayer alloc] initWithCDN:@"www.mycdn.com/manifest.mpd" 
-                             enabledPDN:NO
-                             licenseKey:nil];
+VBPlayer *player = [[VBPlayer alloc] initWithCDN:@"www.mycdn.com/manifest.mpd"];
 ```
+Immediately after its initialization the player will try to start downloading the stream. The `status` property is *KVO-compliant* and as soon as the player has buffered enough
+data it will be set to `VBPlayerStatusReadyToPlay`.   
+Having this property set means you can assume the following:
+* the playback will start simultaneously if you issue `-play`
+* `duration` and `currentTime` will be resolved.
 
-The player has a status property which you can observe.   
-When the player status is changed to `VBPlayerStatusReadyToPlay` you can safely assume that  `play` will start the playback simultaneously.
+If the player fails for some reason the status will be set to `VBPlayerStatusFailed` and the `error` property will contain
+more information about the failure.  
+The player will stop automatically when it is deallocated. If you need to change the *CDN* source of the player you'll just have to reinitialize it.
 
+You can use `-seekToTime:` methods to seek the media timeline if the stream is not a live broadcast. To let you help draw
+adequate seek bar you can subscribe as a timeline observer using `-addPeriodicTimeObserverForInterval:queue:usingBlock:`
 
-If you want to restart the player, you just have to reinitilize it, like this:  
-`_player = [[VBPlayer alloc] ... ];`
+Setting a `VBPlayerDelegate` will get you notified about a certain playback events, like stalls and when the playback has finished.
 
-If the player fails for some reason, i.e when its status becomes 
-`VBPlayerStatusFailed`, you can examine its `error` property for more information 
-about the failure.
+##### VBDataPlayer
+This API lets you feed the player with media segments much like a queue or a buffer:
+````
+VBDataPlayer *player = [VBDataPlayer createDataPlayer];
+...
+NSError *error = nil;
+BOOL succ;
+NSData *segmentData = ... ;
+// NOTE: It will be a good idea not to call this from the main thread.
+succ = [player appendData:segmentData coding:(VBDataCodingMP4) error:&error];
+if (!succ) {
+    // inspect error
+}
+````
+Current supported media codings are all variety of the MP4.  
 
-API is pretty self-explanatory and you can use comments in `VBPlayer.h` for more information.
+As soon as the player had been supplied with enough data (both audio and video) it will change its `status` property.  
+You can inspect the buffered duration ahead of time using `-bufferredDuration` method.  
+This implementation doesn't know when the stream is going to an end so it is the client's responsibility to call `-endOfStream` whenever there is no more data to append. If there is a delegate, `-playerDidFinish` will be called immediately after the last piece of data had been played.
 
-### Basic usage example
+A thing to **keep in mind** about this player is that **it doesn't cache any data back in time**. This means that anything that
+had been played *must* be supplied again if a *seek* is issued.
 
-The first thing you need to do is to provide or create a `UIView`, which will 
-display the output of the player. The views's layer must be of `VBPlayerLayer` class, i.e it must have its `+layerClass` method overridden:
-  
+##### VBDisplayLayer
+After the player is ready to play (or even if it is not) you can supply it with a render or a display layer using VBPlayer's `-setDisplayLayer` to capture its video output.  
+A recommended usage of `VBDisplayLayer` is to define your own `UIView` and set it as layer of this view:
 ```
 // PlayerView.m
-#import "VBPlayer.h"
+#import "VBDisplayLayer.h"
 @implementation PlayerView
-
 + (Class)layerClass {
-  return [VBPlayerLayer class];
+  return [VBDisplayLayer class];
 }
 @end
 ```
-Now let's assume all the action will happen in a view controller named 
-**PlayerViewController:**
-
-```
-// PlayerViewController.m
-
-#import "VBPlayer.h"
-#import "PlayerView.h"
-
-// We will use custom observe context for the player's status. 
-// You can observe it with or without different context. It's up to you.
-static void *PlayerStatusObserveCtx = &PlayerStatusObserveCtx;
-
-@interface PlayerViewController() 
-
-@property (nonatomic, strong) VBPlayer *player;
-@property (nonatomic, strong) PlayerView *playerView;
-@end
-
-@imlementation PlayerViewController
-
-- (void)viewDidLoad {
-  [super viewDidLoad];
-
-  self.playerView = [[PlayerView alloc] initWithFrame:self.view.bounds];
-  // An important step is to set the appropriate resize mask so the video 
-  // can be properly displayed when the device is rotated.
-  self.playerView.autoresizingMask = (UIViewAutoresizingFlexibleWidth 
-                                      | UIViewAutoresizingFlexibleHeight);
-  [self.view addSubview:self.playerView];
-
-  self.player = [[VBPlayer alloc] initWithCDN:@"www.mycdn.com/manifest.mpd" 
-                                   enabledPDN:NO // Use the player only for playback i.e., without p2p
-                                   licenseKey:nil];
-  [self.player addObserver:self
-                forKeyPath:@"status"
-                   options:(NSKeyValueObservingOptionNew|NSKeyValueObservingOptionInitial)
-                   context:PlayerStatusObserveCtx];
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath
-                      ofObject:(id)object
-                        change:(NSDictionary *)change
-                       context:(void *)context {
-  if (context = PlayerStatusObserveCtx) {
-    // NOTE: The player will dispatch KVOs about its status on the main queue.
-    VBPlayerStatus status = (VBPlayerStatus)[change[NSKeyValueChangeNewKey] integerValue];
-    switch (status) {
-      case VBPlayerStatusUnknown: {
-      // Not ready yet
-      break;
-      }
-      case VBPlayerStatusReadyToPlay: {
-        // The player is ready to play and we can display its output.
-        [(VBPlayerLayer *)[self.playerView layer] setPlayer:self.player];
-        [self.player play];
-      break;
-      }
-      case VBPlayerStatusFailed: {
-        NSError *error = self.player.error;
-        NSLog(@"Player failed: %@", error);
-        break;
-      }
-    }
-  }
-}
-```
+It has some useful properties like the *KVO-Compliant* `displayRect` which you should observer to position your UI controls.
