@@ -78,9 +78,8 @@ static void *kPlayerStatusObserveContext = &kPlayerStatusObserveContext;
   
   self.player = [[VBPlayer alloc]
                  // Viblast: You can also try with your favourite HLS or DASH stream :)
-                 initWithCDN:@"http://cdn3.viblast.com/streams/dash/vod-bunny/SNE_DASH_CASE3B_SD_REVISED.mpd"
-                 enabledPDN:NO
-                 licenseKey:nil];
+                 initWithCDN:@"http://cdn3.viblast.com/streams/dash/vod-bunny/SNE_DASH_CASE3B_SD_REVISED.mpd"];
+  
   [self.player addObserver:self
                 forKeyPath:@"status"
                    options:(NSKeyValueObservingOptionNew|NSKeyValueObservingOptionInitial)

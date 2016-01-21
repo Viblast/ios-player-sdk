@@ -26,13 +26,22 @@ typedef NS_ENUM(NSInteger, VBPlayerStatus) {
 
 VIBLAST_EXPORT NSString *const VBErrorDomain;
 
-@class VBPlayer;
+/* 
+ VBPlayer settings dictionary keys
+ 
+ */
+
+// Enables p2p media delivery
+VIBLAST_EXPORT NSString *const VBEnablePDNKey; // NSNumber (BOOL)
+
 
 /*
  VBPlayerDelegate
  
  All of the methods are sent on the main thread.
  */
+@class VBPlayer;
+
 @protocol VBPlayerDelegate <NSObject>
 
 @optional
@@ -69,9 +78,8 @@ VIBLAST_EXPORT NSString *const VBErrorDomain;
 
 @property (nonatomic, weak) id<VBPlayerDelegate> delegate;
 
-- (instancetype)initWithCDN:(NSString *)cdn
-                 enabledPDN:(BOOL)enabledPDN
-                 licenseKey:(NSString *)licenseKey;
+- (instancetype)initWithCDN:(NSString *)cdn;
+- (instancetype)initWithCDN:(NSString *)cdn settings:(NSDictionary *)settings;
 
 - (instancetype)initWithArgs:(NSString *)args;
 
