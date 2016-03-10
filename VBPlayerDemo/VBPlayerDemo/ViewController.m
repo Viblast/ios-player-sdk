@@ -13,7 +13,7 @@
 static NSUInteger kToolbarPlaybackButtonItemIndex = 1;
 static void *kPlayerStatusObserveContext = &kPlayerStatusObserveContext;
 
-@interface ViewController ()
+@interface ViewController () <VBPlayerDelegate>
 
 @property (strong, nonatomic) VBPlayer *player;
 @property (weak, nonatomic) IBOutlet PlayerView *playerView;
@@ -79,6 +79,7 @@ static void *kPlayerStatusObserveContext = &kPlayerStatusObserveContext;
   self.player = [[VBPlayer alloc]
                  // Viblast: You can also try with your favourite HLS or DASH stream :)
                  initWithCDN:@"http://cdn3.viblast.com/streams/dash/vod-bunny/SNE_DASH_CASE3B_SD_REVISED.mpd"];
+  self.player.delegate = self;
   
   [self.player addObserver:self
                 forKeyPath:@"status"
@@ -139,6 +140,14 @@ static void *kPlayerStatusObserveContext = &kPlayerStatusObserveContext;
       }
     }
   }
+}
+
+- (void)playerDidEnterStall:(VBPlayer *)player {
+  [self setLoadingVisible:YES];
+}
+
+- (void)playerDidExitStall:(VBPlayer *)player {
+  [self setLoadingVisible:NO];
 }
 
 @end
